@@ -36,7 +36,6 @@ const YEARS = ['Not year-specific','1st Year','2nd Year','3rd Year','4th Year','
 
 /* ---------------- State ---------------- */
 let listings = [];
-let myIds = [];
 let profile = {name:'', phone:'', email:''};
 let currentCategory = 'all';
 let revealedContacts = new Set();
@@ -99,20 +98,9 @@ async function loadListings() {
     listings = [];
   }
 }
-async function saveListings(){
-  try{ await window.storage.set('dukaan_listings', JSON.stringify(listings), true); }
-  catch(e){ console.error('Could not save listings', e); }
-}
-async function loadMyIds(){
-  try{
-    const res = await window.storage.get('dukaan_my_ids', false);
-    myIds = res ? JSON.parse(res.value) : [];
-  }catch(e){ myIds = []; }
-}
-async function saveMyIds(){
-  try{ await window.storage.set('dukaan_my_ids', JSON.stringify(myIds), false); }
-  catch(e){ console.error('Could not save my ids', e); }
-}
+
+
+
 async function loadProfile(){
   try{
     const res = await window.storage.get('dukaan_my_profile', false);
@@ -167,7 +155,6 @@ async function init(){
   grid.innerHTML = `<div class="empty-state script">Fetching what's up for grabs…</div>`;
   await Promise.all([
   loadListings(),
-  loadMyIds(),
   loadProfile(),
   loadSession()
   ]);
@@ -373,7 +360,6 @@ function openSellModal(){
       <div class="field" id="f-name">
         <label>Your name</label>
         <div class="field" id="f-name">
-            <label>Your Name</label>
             <input
                 id="in-name"
                 value="${escapeHtml(currentUser?.name || '')}"
