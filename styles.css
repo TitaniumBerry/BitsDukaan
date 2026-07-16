@@ -431,12 +431,15 @@ footer p{margin:8px 0 0;}
   font-size:15px;
   line-height:1.6;
 
-  margin:6px 0;
+  margin:12px auto;
+  text-align: center;
 }
 
 .fa-row{
   display:flex;
   align-items:center;
+  justify-content:center;
+  position:relative;
   gap:8px;
 }
 
@@ -467,14 +470,19 @@ footer p{margin:8px 0 0;}
   align-items:center;
   gap:12px;
   margin-bottom:12px;
+  position:relative;
 }
 
 .fa-id{
   flex:1;
+  text-align:center;
 }
 
 .fa-badge{
-  margin-left:auto;
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
 }
 
 .fa-contact{
@@ -482,7 +490,8 @@ footer p{margin:8px 0 0;}
     margin-left: auto;
   font-size:18px;
   font-weight:700;
-
+  position:absolute;
+  right:0;
   text-decoration:none;
 }
 
