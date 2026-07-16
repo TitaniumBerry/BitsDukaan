@@ -416,23 +416,32 @@ function validateAndProceed(){
   verified: true
 };
 
-listings.unshift(draft);
-myIds.push(draft.id);
+try {
+  const res = await fetch('/api/create-listing', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(draft)
+  });
 
-profile = {
-  name: draft.sellerName,
-  phone: draft.sellerPhone,
-};
+  if (!res.ok) {
+    throw new Error('Failed to create listing');
+  }
 
-Promise.all([
-  saveListings(),
-  saveMyIds(),
-  saveProfile()
-]);
+  profile = {
+    name: draft.sellerName,
+    phone: draft.sellerPhone
+  };
 
-closeModal();
-renderGrid();
-showToast('Listing published!');
+  await saveProfile();
+
+  closeModal();
+  showToast('Listing published!');
+} catch (err) {
+  console.error(err);
+  showToast('Could not publish listing');
+}
 }
 
 
