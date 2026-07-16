@@ -528,17 +528,44 @@ function openMyListingsModal(){
   document.getElementById('mineList').addEventListener('click', async e=>{
     const toggleBtn = e.target.closest('.toggle-sold');
     const delBtn = e.target.closest('.delete-listing');
+
     if(toggleBtn){
-      const l = listings.find(x=>x.id===toggleBtn.dataset.id);
-      if(l){ l.sold = !l.sold; await saveListings(); openMyListingsModal(); renderGrid(); }
+        const l = listings.find(x => x.id === toggleBtn.dataset.id);
+
+        if(l){
+        await fetch('/api/toggle-sold', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+            id: l.id,
+            sold: !l.sold
+            })
+        });
+
+        await loadListings();
+        openMyListingsModal();
+        renderGrid();
+        }
     }
+
     if(delBtn){
-      listings = listings.filter(x=>x.id!==delBtn.dataset.id);
-      myIds = myIds.filter(id=>id!==delBtn.dataset.id);
-      await Promise.all([saveListings(), saveMyIds()]);
-      openMyListingsModal(); renderGrid();
+        await fetch('/api/delete-listing', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: delBtn.dataset.id
+        })
+        });
+
+        await loadListings();
+        openMyListingsModal();
+        renderGrid();
     }
-  });
+    });
 }
 
 /* ---------------- Utils ---------------- */
