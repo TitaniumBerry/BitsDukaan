@@ -374,6 +374,7 @@ footer p{margin:8px 0 0;}
   width:min(700px,90vw);
   margin:24px auto;
   padding:24px;
+  align-items: center;
 
   background:linear-gradient(
     135deg,
