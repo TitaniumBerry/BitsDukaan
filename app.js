@@ -369,7 +369,7 @@ function setInvalid(fieldId, invalid){
   document.getElementById(fieldId).classList.toggle('invalid', invalid);
 }
 
-function validateAndProceed(){
+async function validateAndProceed(){
   const title = document.getElementById('in-title').value.trim();
   const category = document.getElementById('in-category').value;
   const branch = document.getElementById('in-branch').value;
