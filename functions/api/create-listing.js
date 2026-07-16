@@ -30,7 +30,7 @@ export async function onRequestPost(context) {
       listing.branch,
       listing.year,
       listing.campus,
-      listing.description,
+      listing.desc,
       listing.price,
       listing.condition,
       listing.sellerName,
