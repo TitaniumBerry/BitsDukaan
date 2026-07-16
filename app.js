@@ -40,8 +40,7 @@ let myIds = [];
 let profile = {name:'', phone:'', email:''};
 let currentCategory = 'all';
 let revealedContacts = new Set();
-let pendingDraft = null;
-let pendingOtp = null;
+let currentUser = null;             // email, name
 
 const grid = document.getElementById('listingsGrid');
 const modalRoot = document.getElementById('modalRoot');
@@ -78,13 +77,51 @@ async function saveProfile(){
   catch(e){ console.error('Could not save profile', e); }
 }
 
+
+// email check
+function isBitsEmail(email) {
+  return email?.toLowerCase().endsWith('@pilani.bits-pilani.ac.in');
+}
+
+/* load session before init */
+async function loadSession() {
+  try {
+    const res = await fetch('/api/me', {
+      credentials: 'include'
+    });
+
+    if (!res.ok) {
+      currentUser = null;
+      return;
+    }
+
+    const user = await res.json();
+
+    if (!isBitsEmail(user.email)) {
+      currentUser = null;
+      return;
+    }
+
+    currentUser = user;
+  } catch {
+    currentUser = null;
+  }
+}
+
+
+
 /* ---------------- Init ---------------- */
 async function init(){
   buildFilterSelects();
   buildChips();
   updateBookFiltersVisibility();
   grid.innerHTML = `<div class="empty-state script">Fetching what's up for grabs…</div>`;
-  await Promise.all([loadListings(), loadMyIds(), loadProfile()]);
+  await Promise.all([
+  loadListings(),
+  loadMyIds(),
+  loadProfile(),
+  loadSession()
+  ]);
   renderGrid();
   wireControls();
 }
@@ -127,8 +164,15 @@ function wireControls(){
   document.getElementById('branchFilter').addEventListener('change', renderGrid);
   document.getElementById('yearFilter').addEventListener('change', renderGrid);
   document.getElementById('sortSelect').addEventListener('change', renderGrid);
-  document.getElementById('btnSell').addEventListener('click', openSellModal);
   document.getElementById('btnMyListings').addEventListener('click', openMyListingsModal);
+  document.getElementById('btnSell').addEventListener('click', async () => {
+  if (!currentUser) {
+    window.location.href = '/auth/google';
+    return;
+  }
+
+  openSellModal();
+  });
   grid.addEventListener('click', onGridClick);
 }
 
@@ -227,7 +271,7 @@ function openSellModal(){
     <div class="modal">
       <button class="modal-close" id="closeSell">&times;</button>
       <h2>List an item</h2>
-      <p class="sub">Fill this in once — your phone &amp; BITS email need a one-time verification before the listing goes live.</p>
+      <p class="sub">List your item for fellow BITSians. Your BITS email is verified automatically through Google sign-in.</p>
 
       <div class="field" id="f-title">
         <label>Title</label>
@@ -290,13 +334,16 @@ function openSellModal(){
           <span class="error">Enter a valid 10-digit mobile number.</span>
         </div>
         <div class="field" id="f-email">
-          <label>BITS email <span class="hint">(mandatory)</span></label>
-          <input id="in-email" placeholder="f20xxxxx@pilani.bits-pilani.ac.in" value="${escapeHtml(profile.email)}" />
-          <span class="error">Use your official @bits-pilani.ac.in email.</span>
+        <label>BITS email</label>
+        <input
+            id="in-email"
+            value="${escapeHtml(currentUser?.email || '')}"
+            readonly
+        />
         </div>
       </div>
 
-      <button class="btn btn-primary" id="submitSell" style="width:100%; margin-top:6px;">Continue to verification</button>
+      <button class="btn btn-primary" id="submitSell" style="width:100%; margin-top:6px;">Publish Listing</button>
     </div>
   </div>`;
   document.getElementById('closeSell').addEventListener('click', closeModal);
@@ -343,62 +390,50 @@ function validateAndProceed(){
   const phoneOk = /^\+?\d{10,13}$/.test(phone);
   setInvalid('f-phone', !phoneOk); if(!phoneOk) ok=false;
 
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.toLowerCase().endsWith('bits-pilani.ac.in');
-  setInvalid('f-email', !emailOk); if(!emailOk) ok=false;
-
+  if (!currentUser) {
+  showToast('Please sign in with your BITS account.');
+  return;
+  }
   if(!ok) return;
 
-  pendingDraft = {
-    id: 'l' + Date.now() + Math.floor(Math.random()*1000),
-    title, category, branch, year, campus, desc,
-    price: Number(price), condition,
-    sellerName: name, sellerPhone: phone, sellerEmail: email,
-    createdAt: Date.now(), sold:false
-  };
-  openVerifyModal();
+  const draft = {
+  id: 'l' + Date.now() + Math.floor(Math.random()*1000),
+  title,
+  category,
+  branch,
+  year,
+  campus,
+  desc,
+  price: Number(price),
+  condition,
+  sellerName: name,
+  sellerPhone: phone,
+  sellerEmail: currentUser.email,
+  createdAt: Date.now(),
+  sold: false,
+  verified: true
+};
+
+listings.unshift(draft);
+myIds.push(draft.id);
+
+profile = {
+  name: draft.sellerName,
+  phone: draft.sellerPhone,
+};
+
+Promise.all([
+  saveListings(),
+  saveMyIds(),
+  saveProfile()
+]);
+
+closeModal();
+renderGrid();
+showToast('Listing published!');
 }
 
-/* ---------------- Verification modal ---------------- */
-function openVerifyModal(){
-  pendingOtp = String(Math.floor(100000 + Math.random()*900000));
-  modalRoot.innerHTML = `
-  <div class="overlay" id="overlayVerify">
-    <div class="modal">
-      <button class="modal-close" id="closeVerify">&times;</button>
-      <h2>Verify it's really you</h2>
-      <p class="sub">We check every seller's phone &amp; BITS email before a listing goes live, so buyers know who they're dealing with.</p>
-      <div class="notice">Demo mode: this app has no live SMS/email gateway connected, so the code is shown right here instead of being texted/emailed to you.</div>
-      <p style="font-size:13.5px;">Code for <strong>${escapeHtml(pendingDraft.sellerPhone)}</strong> and <strong>${escapeHtml(pendingDraft.sellerEmail)}</strong>:</p>
-      <div class="otp-code">${pendingOtp}</div>
-      <div class="field" id="f-otp">
-        <label>Enter the 6-digit code</label>
-        <input id="in-otp" maxlength="6" placeholder="••••••" />
-        <span class="error">That code doesn't match. Try again.</span>
-      </div>
-      <button class="btn btn-teal" id="confirmOtp" style="width:100%;">Verify &amp; publish listing</button>
-    </div>
-  </div>`;
-  document.getElementById('closeVerify').addEventListener('click', ()=>{ pendingDraft=null; closeModal(); });
-  document.getElementById('overlayVerify').addEventListener('click', e=>{ if(e.target.id==='overlayVerify'){ pendingDraft=null; closeModal(); } });
-  document.getElementById('confirmOtp').addEventListener('click', confirmOtp);
-}
 
-async function confirmOtp(){
-  const entered = document.getElementById('in-otp').value.trim();
-  if(entered !== pendingOtp){
-    setInvalid('f-otp', true);
-    return;
-  }
-  const draft = {...pendingDraft, verified:true};
-  listings.unshift(draft);
-  myIds.push(draft.id);
-  profile = {name: draft.sellerName, phone: draft.sellerPhone, email: draft.sellerEmail};
-  await Promise.all([saveListings(), saveMyIds(), saveProfile()]);
-  pendingDraft = null; pendingOtp = null;
-  closeModal();
-  renderGrid();
-  showToast('Listing published! Juniors can now find your item.');
-}
 
 /* ---------------- My listings modal ---------------- */
 function openMyListingsModal(){
