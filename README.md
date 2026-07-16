@@ -139,8 +139,6 @@ BITS-Dukaan/
 
 Founder & Frontend Development
 
-Designed and built the marketplace interface and overall user experience.
-
 ### Chirag Bajaj
 
 Backend & Infrastructure
