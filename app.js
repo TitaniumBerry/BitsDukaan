@@ -250,7 +250,7 @@ function renderGrid(){
 
   if(items.length===0){
     grid.innerHTML = `<div class="empty-state">
-      <div class="script">Nothing here yet — be the first to pin something up!</div>
+      <div class="script">Nothing here yet, be the first to pin something up!</div>
       <p>Try a different filter, or list your own book/trunk/cycle for juniors to grab.</p>
     </div>`;
     return;
