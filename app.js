@@ -55,6 +55,7 @@ async function loadListings() {
     }
 
     const data = await res.json();
+    console.log("Listings from API:", data);
 
     listings = data.map(item => ({
       id: item.id,
