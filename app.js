@@ -86,12 +86,9 @@ function isBitsEmail(email) {
 /* load session before init */
 async function loadSession() {
   try {
-    const res = await fetch(
-    'https://bits-dukaan-auth.chirag-bajaj-1010.workers.dev/api/me',
-    {
+    const res = await fetch('/api/me', {
         credentials: 'include'
-    }
-    );
+    });
 
     if (!res.ok) {
       currentUser = null;
@@ -172,7 +169,7 @@ function wireControls(){
   document.getElementById('btnMyListings').addEventListener('click', openMyListingsModal);
   document.getElementById('btnSell').addEventListener('click', async () => {
   if (!currentUser) {
-    window.location.href = 'https://bits-dukaan-auth.chirag-bajaj-1010.workers.dev/google/auth';
+    window.location.href = '/google/auth';
     return;
   }
 
