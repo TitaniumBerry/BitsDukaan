@@ -372,7 +372,14 @@ function openSellModal(){
 
       <div class="field" id="f-name">
         <label>Your name</label>
-        <input id="in-name" placeholder="e.g. Aditi Sharma" value="${escapeHtml(profile.name)}" />
+        <div class="field" id="f-name">
+            <label>Your Name</label>
+            <input
+                id="in-name"
+                value="${escapeHtml(currentUser?.name || '')}"
+                readonly
+            />
+            </div>
         <span class="error">Please enter your name.</span>
       </div>
 
@@ -386,7 +393,7 @@ function openSellModal(){
         <label>BITS email</label>
         <input
             id="in-email"
-            value="${escapeHtml(currentUser?.email || '')}"
+            readonly value="${escapeHtml(currentUser?.email || '')}"
             readonly
         />
         </div>
