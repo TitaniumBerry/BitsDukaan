@@ -46,11 +46,37 @@ const grid = document.getElementById('listingsGrid');
 const modalRoot = document.getElementById('modalRoot');
 
 /* ---------------- Storage helpers ---------------- */
-async function loadListings(){
-  try{
-    const res = await window.storage.get('dukaan_listings', true);
-    listings = res ? JSON.parse(res.value) : [];
-  }catch(e){ listings = []; }
+async function loadListings() {
+  try {
+    const res = await fetch('/api/listings');
+
+    if (!res.ok) {
+      throw new Error('Failed to load listings');
+    }
+
+    const data = await res.json();
+
+    listings = data.map(item => ({
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      branch: item.branch,
+      year: item.year,
+      campus: item.campus,
+      desc: item.description,
+      price: item.price,
+      condition: item.item_condition,
+      sellerName: item.seller_name,
+      sellerPhone: item.seller_phone,
+      sellerEmail: item.seller_email,
+      createdAt: item.created_at,
+      sold: Boolean(item.sold),
+      verified: true
+    }));
+  } catch (e) {
+    console.error(e);
+    listings = [];
+  }
 }
 async function saveListings(){
   try{ await window.storage.set('dukaan_listings', JSON.stringify(listings), true); }
